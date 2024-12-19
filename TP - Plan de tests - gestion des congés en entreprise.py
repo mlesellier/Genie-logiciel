@@ -58,7 +58,7 @@ class HRTest(unittest.TestCase):
             self.john_doe, VacationType.VACATION, self.vacation_start, self.vacation_end
         )
         self.team.vacations.append(vacation)
-        self.assertEqual(hr.getVacations(self.team), [vacation])
+        self.assertEqual(hr.get_vacations(self.team), [vacation])
 
 
 if __name__ == "__main__":

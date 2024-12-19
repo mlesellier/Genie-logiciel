@@ -45,5 +45,5 @@ class Team:
 class HR:
     teams: list[Team] = attrs.field(factory=list)
 
-    def getVacations(self, team: Team):
+    def get_vacations(self, team: Team):
         return team.vacations
