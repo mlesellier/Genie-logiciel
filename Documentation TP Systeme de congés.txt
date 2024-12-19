@@ -17,3 +17,15 @@ Analyse :
 
 Dans ce projet il est donc demandé de creer une interface permettant de gérer les demandes de congés de divers employes.
 Le projet s'adresse donc à un ou des gestionnaire de ressources humaines, un ou des managers et les employés.
+
+Les managers et RH étant aussi des employés vont techniquement hérité des droits des employés afin de eux aussi pouvoir poser des congés.
+On retrouvera ces derniers dans les UML donc diagrammes de classes et cas d'utilisation ou des flèches sont dirigés vers employés.
+Dans l'implémentation, on pourra donc retrouver lors de l'établissement des classes RH et Manager, la classe Employé.
+
+Scénarios de test :
+Test de soumission de demande de congé :
+Vérifier que l’employé peut soumettre une demande avec les dates et le type de congé.
+Test de validation/refus par le manager :
+Vérifier que le manager peut visualiser les demandes en attente et mettre à jour leur état.
+Test de suivi RH :
+Vérifier que la RH peut consulter l’historique et l’état des congés pour tous les employés.
