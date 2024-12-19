@@ -14,4 +14,6 @@ Analyse :
                         Un employé fait une demande de congé.
                         Un manager reçoit une notification pour valider ou refuser la demande.
                         La RH suit toutes les demandes et peut intervenir pour gérer des situations exceptionnelles.
-                        
+
+Dans ce projet il est donc demandé de creer une interface permettant de gérer les demandes de congés de divers employes.
+Le projet s'adresse donc à un ou des gestionnaire de ressources humaines, un ou des managers et les employés.

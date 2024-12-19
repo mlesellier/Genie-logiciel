@@ -65,6 +65,5 @@ class DemandeConge:
         self.statut = StatutDemande.EN_ATTENTE
 
     def calculer_duree(self):
-        #code 
-        pass
+        return (self.date_fin - self.date_debut)
 
