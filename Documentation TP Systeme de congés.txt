@@ -1,0 +1,17 @@
+Documentation TP Systeme de congés
+
+Analyse : 
+    Utilisateurs : -Manager / -Equipe / -RH / -Employés
+                    RH : Doit pouvoir voir les congés de l'ensemble des employés et poser ses congés
+                    Manager (N+1): Doit pouvoir voir les congés de ses équipes, les valider ou refuser et poser ses congés
+                    Employés : Doit pouvoir poser ses congés
+
+    Fonctionnalités attendus :  Une interface permettant de soumettre des demandes de congé
+                                Une interface permettant de visualiser et gérer (valider ou refuser) les congés d'une partie des employés en fonction du rôle de l'utilisateur
+                                Pouvoir sélectionner le type de congés demandés
+
+    Cas d’utilisation :
+                        Un employé fait une demande de congé.
+                        Un manager reçoit une notification pour valider ou refuser la demande.
+                        La RH suit toutes les demandes et peut intervenir pour gérer des situations exceptionnelles.
+                        
