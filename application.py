@@ -8,9 +8,10 @@ Created on Thu Dec 19 17:24:49 2024
 import sys
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QHBoxLayout,
-    QPushButton, QLabel, QLineEdit, QComboBox, QTextEdit, QWidget, QMessageBox, QDateEdit
+    QPushButton, QLabel, QLineEdit, QComboBox, QTableWidget, QTableWidgetItem,
+    QWidget, QMessageBox, QDateEdit
 )
-from PyQt5.QtCore import QDate
+from PyQt5.QtCore import QDate, Qt
 import beta  # Importation du script "beta" pour les fonctionnalités
 
 
@@ -18,7 +19,7 @@ class MainApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Gestion des Congés")
-        self.setGeometry(100, 100, 700, 400)
+        self.setGeometry(100, 100, 800, 600)
         self.init_ui()
 
     def init_ui(self):
@@ -78,21 +79,37 @@ class MainApp(QMainWindow):
         leave_layout.addWidget(add_leave_button)
         layout.addLayout(leave_layout)
 
-        # Section : Afficher les congés
-        display_conges_button = QPushButton("Afficher les congés")
-        display_conges_button.clicked.connect(self.afficher_conges)
-        self.conges_display = QTextEdit(self)
-        self.conges_display.setReadOnly(True)
+        # Section : Afficher les demandes de congés
+        layout.addWidget(QLabel("Demandes de congés"))
+        self.table = QTableWidget(self)
+        self.table.setColumnCount(5)
+        self.table.setHorizontalHeaderLabels(["ID", "Type", "Début", "Fin", "Statut"])
+        self.table.setSelectionBehavior(self.table.SelectRows)
+        self.table.setSelectionMode(self.table.SingleSelection)
+        layout.addWidget(self.table)
 
-        layout.addWidget(display_conges_button)
-        layout.addWidget(self.conges_display)
+        # Boutons pour traiter une demande
+        process_layout = QHBoxLayout()
+        validate_button = QPushButton("Valider")
+        validate_button.clicked.connect(self.valider_demande)
+        refuse_button = QPushButton("Refuser")
+        refuse_button.clicked.connect(self.refuser_demande)
+        process_layout.addWidget(validate_button)
+        process_layout.addWidget(refuse_button)
+        layout.addLayout(process_layout)
 
         # Configuration principale
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
 
+        # Charger les données en temps réel
+        self.charger_demandes()
+
     def ajouter_utilisateur(self):
+        """
+        Ajoute un utilisateur avec nom, email et rôle.
+        """
         nom = self.nom_input.text()
         email = self.email_input.text()
         role = self.role_input.currentText()
@@ -103,6 +120,9 @@ class MainApp(QMainWindow):
             QMessageBox.warning(self, "Erreur", "Veuillez remplir tous les champs.")
 
     def ajouter_demande_conge(self):
+        """
+        Ajoute une nouvelle demande de congé.
+        """
         try:
             utilisateur_id = int(self.user_id_input.text())
             type_conge = self.type_conge_input.currentText()
@@ -116,20 +136,52 @@ class MainApp(QMainWindow):
             if type_conge and date_debut and date_fin:
                 beta.ajouter_demande_conge(utilisateur_id, type_conge, date_debut, date_fin, motif)
                 QMessageBox.information(self, "Succès", "Demande de congé ajoutée avec succès.")
+                self.charger_demandes()
             else:
                 QMessageBox.warning(self, "Erreur", "Veuillez remplir tous les champs obligatoires.")
         except ValueError:
             QMessageBox.warning(self, "Erreur", "ID Utilisateur doit être un entier valide.")
 
-    def afficher_conges(self):
+    def charger_demandes(self):
+        """
+        Charge les demandes de congés depuis la base et les affiche dans le tableau.
+        """
+        self.table.setRowCount(0)  # Réinitialiser le tableau
         conges = beta.consulter_conges(role="RH")  # Par défaut, affiche tous les congés
-        if conges:
-            display_text = "\n".join(
-                [f"ID: {c['id']}, Type: {c['type']}, Début: {c['date_debut']}, Fin: {c['date_fin']}, Statut: {c['statut']}" for c in conges]
-            )
+        for conge in conges:
+            row = self.table.rowCount()
+            self.table.insertRow(row)
+            self.table.setItem(row, 0, QTableWidgetItem(str(conge["id"])))
+            self.table.setItem(row, 1, QTableWidgetItem(conge["type"]))
+            self.table.setItem(row, 2, QTableWidgetItem(conge["date_debut"]))
+            self.table.setItem(row, 3, QTableWidgetItem(conge["date_fin"]))
+            self.table.setItem(row, 4, QTableWidgetItem(conge["statut"]))
+
+    def valider_demande(self):
+        """
+        Valide la demande sélectionnée.
+        """
+        selected_row = self.table.currentRow()
+        if selected_row >= 0:
+            conge_id = int(self.table.item(selected_row, 0).text())
+            beta.traiter_demande_conge(conge_id, "Validé")
+            QMessageBox.information(self, "Succès", "Demande validée.")
+            self.charger_demandes()
         else:
-            display_text = "Aucun congé enregistré."
-        self.conges_display.setText(display_text)
+            QMessageBox.warning(self, "Erreur", "Aucune demande sélectionnée.")
+
+    def refuser_demande(self):
+        """
+        Refuse la demande sélectionnée.
+        """
+        selected_row = self.table.currentRow()
+        if selected_row >= 0:
+            conge_id = int(self.table.item(selected_row, 0).text())
+            beta.traiter_demande_conge(conge_id, "Refusé")
+            QMessageBox.information(self, "Succès", "Demande refusée.")
+            self.charger_demandes()
+        else:
+            QMessageBox.warning(self, "Erreur", "Aucune demande sélectionnée.")
 
 
 if __name__ == "__main__":

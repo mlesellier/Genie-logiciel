@@ -1,0 +1,1 @@
+beta contient les script fonctionnelle , application est l'interface graphique et c'est ce script qu'il faut lancer afin d'avoir l'application complète

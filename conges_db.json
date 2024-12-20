@@ -1,0 +1,22 @@
+{
+    "utilisateurs": [
+        {
+            "id": 1,
+            "nom": "moi",
+            "email": "moi@gmail.com",
+            "role": "Employ\u00e9"
+        }
+    ],
+    "conges": [
+        {
+            "id": 1,
+            "utilisateur_id": 1,
+            "type": "Vacances",
+            "date_debut": "2024-12-20",
+            "date_fin": "2024-12-20",
+            "motif": "",
+            "statut": "Refus\u00e9"
+        }
+    ],
+    "jours_feries": []
+}
