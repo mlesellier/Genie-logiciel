@@ -5,6 +5,12 @@
             "nom": "moi",
             "email": "moi@gmail.com",
             "role": "Employ\u00e9"
+        },
+        {
+            "id": 2,
+            "nom": "HA",
+            "email": "HA@gmail.com",
+            "role": "Employ\u00e9"
         }
     ],
     "conges": [
@@ -15,7 +21,16 @@
             "date_debut": "2024-12-20",
             "date_fin": "2024-12-20",
             "motif": "",
-            "statut": "Refus\u00e9"
+            "statut": "Valid\u00e9"
+        },
+        {
+            "id": 2,
+            "utilisateur_id": 2,
+            "type": "Vacances",
+            "date_debut": "2024-12-20",
+            "date_fin": "2024-12-20",
+            "motif": "",
+            "statut": "Valid\u00e9"
         }
     ],
     "jours_feries": []

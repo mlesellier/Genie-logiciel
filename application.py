@@ -7,12 +7,96 @@ Created on Thu Dec 19 17:24:49 2024
 
 import sys
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QVBoxLayout, QHBoxLayout,
-    QPushButton, QLabel, QLineEdit, QComboBox, QTableWidget, QTableWidgetItem,
-    QWidget, QMessageBox, QDateEdit
+    QApplication, QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton,
+    QLabel, QLineEdit, QComboBox, QTableWidget, QTableWidgetItem,
+    QWidget, QMessageBox, QDateEdit, QDialog
 )
-from PyQt5.QtCore import QDate, Qt
+from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import QDate
 import beta  # Importation du script "beta" pour les fonctionnalités
+
+
+class UserDetailsDialog(QDialog):
+    """
+    Fenêtre affichant tous les utilisateurs, leurs rôles et leurs dernières demandes de congé.
+    """
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Détails des Utilisateurs")
+        self.setGeometry(150, 150, 600, 400)
+
+        # Définir une icône pour cette fenêtre
+        self.setWindowIcon(QIcon("users_icon.png"))
+
+        # Appliquer le style royal
+        self.setStyleSheet(self.get_style())
+
+        self.init_ui()
+
+    def init_ui(self):
+        # Layout principal
+        layout = QVBoxLayout()
+
+        # Tableau pour afficher les informations des utilisateurs
+        self.table = QTableWidget(self)
+        self.table.setColumnCount(3)
+        self.table.setHorizontalHeaderLabels(["Nom", "Rôle", "Dernier congé"])
+        layout.addWidget(self.table)
+
+        # Charger les données des utilisateurs
+        self.charger_utilisateurs()
+
+        self.setLayout(layout)
+
+    def charger_utilisateurs(self):
+        """
+        Charge les utilisateurs et leur dernière demande de congé dans le tableau.
+        """
+        data = beta.load_data()  # Charger les données depuis le fichier JSON
+        utilisateurs = data["utilisateurs"]
+        conges = data["conges"]
+
+        self.table.setRowCount(0)  # Réinitialiser le tableau
+
+        for utilisateur in utilisateurs:
+            # Trouver le dernier congé de l'utilisateur
+            dernier_conge = next(
+                (c for c in sorted(conges, key=lambda x: x["date_debut"], reverse=True)
+                 if c["utilisateur_id"] == utilisateur["id"]),
+                None
+            )
+            dernier_conge_info = (
+                f"{dernier_conge['type']} ({dernier_conge['date_debut']} - {dernier_conge['date_fin']})"
+                if dernier_conge else "Aucun"
+            )
+
+            # Ajouter une ligne au tableau
+            row = self.table.rowCount()
+            self.table.insertRow(row)
+            self.table.setItem(row, 0, QTableWidgetItem(utilisateur["nom"]))
+            self.table.setItem(row, 1, QTableWidgetItem(utilisateur["role"]))
+            self.table.setItem(row, 2, QTableWidgetItem(dernier_conge_info))
+
+    def get_style(self):
+        """
+        Retourne le style royal en CSS.
+        """
+        return """
+        QDialog {
+            background-color: #1e3a66;
+            color: #f1c40f;
+        }
+        QTableWidget {
+            border: 2px solid #f1c40f;
+            background-color: #ffffff;
+            color: #1e3a66;
+        }
+        QHeaderView::section {
+            background-color: #f1c40f;
+            color: #1e3a66;
+            font-weight: bold;
+        }
+        """
 
 
 class MainApp(QMainWindow):
@@ -20,6 +104,13 @@ class MainApp(QMainWindow):
         super().__init__()
         self.setWindowTitle("Gestion des Congés")
         self.setGeometry(100, 100, 800, 600)
+
+        # Définir une icône pour la fenêtre principale
+        self.setWindowIcon(QIcon("main_icon.png"))
+
+        # Appliquer le style royal
+        self.setStyleSheet(self.get_style())
+
         self.init_ui()
 
     def init_ui(self):
@@ -49,13 +140,11 @@ class MainApp(QMainWindow):
         self.user_id_input = QLineEdit(self)
         self.user_id_input.setPlaceholderText("ID Utilisateur")
 
-        # Menu déroulant pour type de congé
         self.type_conge_input = QComboBox(self)
         self.type_conge_input.addItems(["Vacances", "RTT", "Maladie", "Mariage", "Décès", "Autre"])
         self.custom_conge_input = QLineEdit(self)
         self.custom_conge_input.setPlaceholderText("Si 'Autre', précisez ici")
 
-        # Sélecteurs de date pour début et fin
         self.date_debut_input = QDateEdit(self)
         self.date_debut_input.setCalendarPopup(True)
         self.date_debut_input.setDate(QDate.currentDate())
@@ -98,6 +187,11 @@ class MainApp(QMainWindow):
         process_layout.addWidget(refuse_button)
         layout.addLayout(process_layout)
 
+        # Bouton : Afficher les détails des utilisateurs
+        user_details_button = QPushButton("Afficher les utilisateurs")
+        user_details_button.clicked.connect(self.afficher_utilisateurs)
+        layout.addWidget(user_details_button)
+
         # Configuration principale
         container = QWidget()
         container.setLayout(layout)
@@ -107,9 +201,6 @@ class MainApp(QMainWindow):
         self.charger_demandes()
 
     def ajouter_utilisateur(self):
-        """
-        Ajoute un utilisateur avec nom, email et rôle.
-        """
         nom = self.nom_input.text()
         email = self.email_input.text()
         role = self.role_input.currentText()
@@ -120,9 +211,6 @@ class MainApp(QMainWindow):
             QMessageBox.warning(self, "Erreur", "Veuillez remplir tous les champs.")
 
     def ajouter_demande_conge(self):
-        """
-        Ajoute une nouvelle demande de congé.
-        """
         try:
             utilisateur_id = int(self.user_id_input.text())
             type_conge = self.type_conge_input.currentText()
@@ -143,11 +231,8 @@ class MainApp(QMainWindow):
             QMessageBox.warning(self, "Erreur", "ID Utilisateur doit être un entier valide.")
 
     def charger_demandes(self):
-        """
-        Charge les demandes de congés depuis la base et les affiche dans le tableau.
-        """
-        self.table.setRowCount(0)  # Réinitialiser le tableau
-        conges = beta.consulter_conges(role="RH")  # Par défaut, affiche tous les congés
+        self.table.setRowCount(0)
+        conges = beta.consulter_conges(role="RH")
         for conge in conges:
             row = self.table.rowCount()
             self.table.insertRow(row)
@@ -158,9 +243,6 @@ class MainApp(QMainWindow):
             self.table.setItem(row, 4, QTableWidgetItem(conge["statut"]))
 
     def valider_demande(self):
-        """
-        Valide la demande sélectionnée.
-        """
         selected_row = self.table.currentRow()
         if selected_row >= 0:
             conge_id = int(self.table.item(selected_row, 0).text())
@@ -171,9 +253,6 @@ class MainApp(QMainWindow):
             QMessageBox.warning(self, "Erreur", "Aucune demande sélectionnée.")
 
     def refuser_demande(self):
-        """
-        Refuse la demande sélectionnée.
-        """
         selected_row = self.table.currentRow()
         if selected_row >= 0:
             conge_id = int(self.table.item(selected_row, 0).text())
@@ -183,10 +262,57 @@ class MainApp(QMainWindow):
         else:
             QMessageBox.warning(self, "Erreur", "Aucune demande sélectionnée.")
 
+    def afficher_utilisateurs(self):
+        dialog = UserDetailsDialog()
+        dialog.exec_()
+
+    def get_style(self):
+        """
+        Retourne le style royal en CSS avec des couleurs délavées.
+        """
+        return """
+        QMainWindow {
+            background-color: #2c496f; /* Bleu délavé */
+            color: #d9c785; /* Doré délavé */
+        }
+        QLabel, QTableWidget {
+            font-family: 'Georgia', serif;
+            font-size: 14px;
+            color: #d9c785; /* Doré délavé */
+        }
+        QLineEdit, QComboBox, QDateEdit {
+            border: 2px solid #d9c785; /* Doré délavé */
+            border-radius: 5px;
+            padding: 5px;
+            background-color: #f5f5f5; /* Blanc cassé */
+            color: #2c496f; /* Bleu délavé */
+        }
+        QPushButton {
+            background-color: #d9c785; /* Doré délavé */
+            color: #2c496f; /* Bleu délavé */
+            border-radius: 10px;
+            padding: 10px;
+            font-weight: bold;
+        }
+        QPushButton:hover {
+            background-color: #c4b374; /* Doré légèrement plus foncé */
+        }
+        QTableWidget {
+            background-color: #ffffff; /* Blanc */
+            color: #2c496f; /* Bleu délavé */
+            border: 2px solid #d9c785; /* Doré délavé */
+        }
+        QHeaderView::section {
+            background-color: #d9c785; /* Doré délavé */
+            color: #2c496f; /* Bleu délavé */
+            font-weight: bold;
+        }
+        """
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     main_window = MainApp()
     main_window.show()
     sys.exit(app.exec_())
+
 
